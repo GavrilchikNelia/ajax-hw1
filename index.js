@@ -1,4 +1,8 @@
-let animation = `<div id="circleG" ><div id="circleG_1" class="circleG"></div><div id="circleG_2" class="circleG"></div><div id="circleG_3" class="circleG"></div></div>`;
+let animations = `<div id="circleG" class="visible"><div id="circleG_1" class="circleG"></div><div id="circleG_2" class="circleG"></div><div id="circleG_3" class="circleG"></div></div>`;
+let list = document.getElementById('list');
+let ol = document.createElement('ol');
+
+let arr = [];
 const xhr = new XMLHttpRequest();
 xhr.open('GET', 'https://swapi.co/api/films/');
 xhr.send();
@@ -7,77 +11,69 @@ xhr.onload = function() {
         alert(`Ошибка ${xhr.status}: ${xhr.statusText}`);
     } else {
 
-        let list = document.getElementById('list');
-        let ol = document.createElement('ol');
         let filmsObj = JSON.parse(xhr.response);
+        console.log(filmsObj);
 
         for ( let i = 0; i < filmsObj.results.length; i++) {
-           let title = filmsObj.results[i].title;
-           let episode = filmsObj.results[i].episode_id;
-           let content = filmsObj.results[i].opening_crawl;
-           let li = document.createElement('li');
-           li.innerHTML = `<p>Фильм: ${title}</p><p>Эпизод: ${episode}</p><p>Описание: ${content}</p><div class="visible">${animation}</div><button type="submit" id="${episode}">Список персонажей</button>`;
-
-           ol.appendChild(li);
+            let films = {
+                title: filmsObj.results[i].title,
+                episode: filmsObj.results[i].episode_id,
+                content: filmsObj.results[i].opening_crawl,
+                persons: filmsObj.results[i].characters,
+            };
+            arr.push(films);
         }
-       list.appendChild(ol);
+        render(arr, animations);
+        list.appendChild(ol);
+        console.log(arr);
     }
-};
-xhr.onerror = function() {
-    alert("Запрос не удался");
 };
 
 document.addEventListener('click', function (event) {
     const animateArr = document.getElementsByClassName('visible');
     event.target.style.display = "none";
-    for (let k = 0; k < animateArr.length; k++) {
-
-        if (event.target.parentNode == animateArr[k].parentNode) {
-            animateArr[k].classList.add('nVis');
-            animateArr[k].classList.remove('visible');
-
-            const person = new XMLHttpRequest();
-            person.open('GET', 'https://swapi.co/api/films/');
-            person.send();
-            person.onload = function () {
-                if (person.status !== 200) {
-                    alert(`Ошибка ${person.status}: ${person.statusText}`);
-                } else {
-
-                    let ol = document.createElement('ol');
-                    let filmPerson = JSON.parse(person.response);
-                    console.log(filmPerson);
-                    for (let i = 0; i < filmPerson.results.length; i++) {
-                        let per = filmPerson.results[i].characters;
-                        if (filmPerson.results[i].episode_id == event.target.id) {
-                            for (let j = 0; j < per.length; j++) {
-                                let personItem = new XMLHttpRequest();
-                                personItem.open('GET', `${per[j]}`);
-                                personItem.send();
-                                personItem.onload = function () {
-                                    let personDetail = JSON.parse(personItem.response);
-                                    let li = document.createElement('li');
-                                    li.innerHTML = `<p>Имя: ${personDetail.name}.</p><p>Рост: ${personDetail.height}.</p><p>Вес: ${personDetail.mass}.</p><p>Цвет волос: ${personDetail.hair_color}.</p><p>Цвет кожи: ${personDetail.skin_color}.</p>`;
-
-                                    ol.appendChild(li);
-                                };
-                                personItem.onerror = function () {
-                                    alert("Запрос не удался");
-                                };
+    for (let y = 0; y < animateArr.length; y++) {
+        if (event.target.parentNode == animateArr[y].parentNode) {
+            animateArr[y].classList.remove('visible');
+            for (let d = 0; d < arr.length; d++) {
+                if (arr[d].episode == event.target.id) {
+                    let olPers = document.createElement('ol');
+                    for (let k = 0; k < arr[d].persons.length; k++) {
+                        const per = new XMLHttpRequest();
+                        per.open('GET', `${arr[d].persons[k]}`);
+                        per.send();
+                        per.onload = function () {
+                            if (per.status !== 200) {
+                                alert(`Ошибка ${per.status}: ${per.statusText}`);
+                            } else {
+                                let personItem = JSON.parse(per.response);
+                                let liPers = document.createElement('li');
+                                liPers.textContent = `${personItem.name}`;
+                                olPers.appendChild(liPers);
                             }
-                            let nVis = document.getElementsByClassName('nVis');
-                            for (let t =0; t < nVis.length; t++)  {
-                                nVis[t].classList.add('visible');
-                                nVis[t].classList.remove('nVis');
-                            }
-                            event.target.parentNode.appendChild(ol);
-                        }
+                        };
+                        per.onerror = function () {
+                            alert("Запрос не удался");
+                        };
                     }
+                    event.target.parentNode.appendChild(olPers);
                 }
-            };
-            person.onerror = function () {
-                alert("Запрос не удался");
-            };
+            }
+            animateArr[y].classList.add('visible');
         }
     }
 });
+
+xhr.onerror = function() {
+    alert("Запрос не удался");
+};
+
+function render (item, animation) {
+    for (let h = 0; h < item.length; h++) {
+        let li = document.createElement('li');
+        li.innerHTML = `<p>Фильм: ${item[h].title}</p><p>Эпизод: ${item[h].episode}</p><p>Описание: ${item[h].content}</p><div class="visible">${animation}</div><button id="${item[h].episode}">Список персонажей</button>`;
+        ol.appendChild(li);
+    }
+}
+
+
