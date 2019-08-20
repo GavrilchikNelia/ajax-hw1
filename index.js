@@ -29,38 +29,44 @@ xhr.onload = function() {
     }
 };
 
-document.addEventListener('click', function (event) {
+ol.addEventListener('click', function (event) {
     const animateArr = document.getElementsByClassName('visible');
-    event.target.style.display = "none";
-    for (let y = 0; y < animateArr.length; y++) {
-        if (event.target.parentNode == animateArr[y].parentNode) {
-            animateArr[y].classList.remove('visible');
-            for (let d = 0; d < arr.length; d++) {
-                if (arr[d].episode == event.target.id) {
-                    let olPers = document.createElement('ol');
-                    for (let k = 0; k < arr[d].persons.length; k++) {
-                        const per = new XMLHttpRequest();
-                        per.open('GET', `${arr[d].persons[k]}`);
-                        per.send();
-                        per.onload = function () {
-                            if (per.status !== 200) {
-                                alert(`Ошибка ${per.status}: ${per.statusText}`);
-                            } else {
-                                let personItem = JSON.parse(per.response);
-                                let liPers = document.createElement('li');
-                                liPers.textContent = `${personItem.name}`;
-                                olPers.appendChild(liPers);
-                            }
-                        };
-                        per.onerror = function () {
-                            alert("Запрос не удался");
-                        };
+    if ( event.target.classList.contains('btn')) {
+        event.target.style.display = "none";
+        for (let y = 0; y < animateArr.length; y++) {
+            if (event.target.parentNode == animateArr[y].parentNode) {
+                animateArr[y].classList.remove('visible');
+                for (let d = 0; d < arr.length; d++) {
+                    if (arr[d].episode == event.target.id) {
+                        let olPers = document.createElement('ol');
+                        for (let k = 0; k < arr[d].persons.length; k++) {
+                            const per = new XMLHttpRequest();
+                            per.open('GET', `${arr[d].persons[k]}`);
+                            per.send();
+                            per.onload = function () {
+                                if (per.status !== 200) {
+                                    alert(`Ошибка ${per.status}: ${per.statusText}`);
+                                } else {
+                                    let personItem = JSON.parse(per.response);
+                                    let liPers = document.createElement('li');
+                                    liPers.textContent = `${personItem.name}`;
+                                    olPers.appendChild(liPers);
+                                }
+                            };
+                            per.onerror = function () {
+                                alert("Запрос не удался");
+                            };
+                        }
+                        event.target.parentNode.appendChild(olPers);
+
+
                     }
-                    event.target.parentNode.appendChild(olPers);
                 }
+                animateArr[y].classList.add('visible');
             }
-            animateArr[y].classList.add('visible');
         }
+    } else {
+        event.target.style.display = "block";
     }
 });
 
@@ -71,7 +77,7 @@ xhr.onerror = function() {
 function render (item, animation) {
     for (let h = 0; h < item.length; h++) {
         let li = document.createElement('li');
-        li.innerHTML = `<p>Фильм: ${item[h].title}</p><p>Эпизод: ${item[h].episode}</p><p>Описание: ${item[h].content}</p><div class="visible">${animation}</div><button id="${item[h].episode}">Список персонажей</button>`;
+        li.innerHTML = `<p>Фильм: ${item[h].title}</p><p>Эпизод: ${item[h].episode}</p><p>Описание: ${item[h].content}</p><div class="visible">${animation}</div><button id="${item[h].episode}" class="btn">Список персонажей</button>`;
         ol.appendChild(li);
     }
 }
